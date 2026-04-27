@@ -1,0 +1,6 @@
+[submodule "extensions/cocos-mcp-server"]
+	path = extensions/cocos-mcp-server
+	url = https://gitlab.umcasual.cn/mcp/cocos-mcp-server.git
+[submodule "extensions/js-obfuscator"]
+	path = extensions/js-obfuscator
+	url = https://github.com/KaiXuanXuan/cocos-js-obfuscator.git

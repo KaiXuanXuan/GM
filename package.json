@@ -1,0 +1,10 @@
+{
+  "name": "GM",
+  "uuid": "95bb25d2-af68-43cc-8bd1-d117aa6572ae",
+  "creator": {
+    "version": "3.8.8"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}
