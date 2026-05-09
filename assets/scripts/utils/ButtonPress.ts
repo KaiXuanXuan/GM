@@ -1,4 +1,4 @@
-import { _decorator, Button, Color, Component, Node, Sprite, tween } from 'cc';
+import { _decorator, Button, Color, Component, Node, Sprite, tween, Vec3 } from 'cc';
 
 const { ccclass, requireComponent } = _decorator;
 const BUTTON_PRESS_ANIM_DURATION = 0.1;
@@ -14,12 +14,15 @@ export class ButtonPress extends Component {
     private _tween: any = null;
     private _sprites: Sprite[] = [];
     private _button: Button | null = null;
+    /** 预制体上的静止缩放（含 mirror：scale.x 为负），按压只做系数缩放，避免抹掉符号 */
+    private readonly _restScale = new Vec3(1, 1, 1);
 
     onLoad() {
         this._button = this.getComponent(Button);
         if (!this._button) {
             throw new Error('ButtonPress 依赖 Button 组件');
         }
+        this._restScale.set(this.node.scale.x, this.node.scale.y, this.node.scale.z);
         this._collectSprites();
         this.node.on(Node.EventType.TOUCH_START, this._onPress, this);
         this.node.on(Node.EventType.TOUCH_CANCEL, this._onRelease, this);
@@ -60,7 +63,11 @@ export class ButtonPress extends Component {
             .to(this._duration, { scale: BUTTON_PRESS_SCALE, progress: 1 }, {
                 easing: 'sineOut',
                 onUpdate: () => {
-                    this.node.setScale(state.scale, state.scale, 1);
+                    this.node.setScale(
+                        this._restScale.x * state.scale,
+                        this._restScale.y * state.scale,
+                        this._restScale.z,
+                    );
                     this._sprites.forEach((sprite) => {
                         sprite.color = this._lerpColor(
                             BUTTON_ENABLED_TINT,
@@ -75,15 +82,13 @@ export class ButtonPress extends Component {
 
     /** 播放点击音效 */
     private playClickSound(): void {
-        const sfxEnabled = window.GM?.data.getState<boolean>('sfx');
-        if (!sfxEnabled) return;
-        window.GM?.audio.playSfx('点击', { volume: 0.8 }).catch(() => {});
+        
     }
 
     private _onRelease() {
         if (!this._button || !this._button.interactable) {
             this._stopTween();
-            this.node.setScale(1, 1, 1);
+            this.node.setScale(this._restScale);
             return;
         }
         this._stopTween();
@@ -92,7 +97,11 @@ export class ButtonPress extends Component {
             .to(this._duration, { scale: 1, progress: 0 }, {
                 easing: 'sineOut',
                 onUpdate: () => {
-                    this.node.setScale(state.scale, state.scale, 1);
+                    this.node.setScale(
+                        this._restScale.x * state.scale,
+                        this._restScale.y * state.scale,
+                        this._restScale.z,
+                    );
                     this._sprites.forEach((sprite) => {
                         sprite.color = this._lerpColor(
                             BUTTON_ENABLED_TINT,
