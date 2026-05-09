@@ -132,6 +132,8 @@ export interface DialogOpenConfig {
   path: string;
   /** Parent node for dialog and mask (optional, defaults to Canvas if not provided) */
   parent?: any; // Node from 'cc'
+  /** 为 false 时不创建半透明遮罩（默认 true） */
+  mask?: boolean;
   /** Animation configuration (optional) */
   animation?: DialogAnimationConfig;
 }
@@ -152,7 +154,7 @@ export interface DialogModule {
   /**
    * Open a dialog from prefab path.
    * Closes any existing dialog first (single-layer behavior).
-   * Auto-creates semi-transparent mask behind dialog.
+   * 默认在弹窗后创建半透明遮罩；config.mask === false 时不创建。
    * Silent fail - returns undefined if prefab not found.
    * Emits 'dialogOpen' event with { node, path } payload on success.
    *

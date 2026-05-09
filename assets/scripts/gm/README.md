@@ -251,6 +251,17 @@ export class GameUI extends Component {
 - **单层模式**: 打开新弹窗时自动关闭已有弹窗
 - **自动遮罩**: 弹窗后自动创建半透明黑色遮罩（50% 透明度）
 
+#### `close()` 做了什么（摘要）
+
+关闭当前弹窗（未打开时安全空操作）：
+
+1. 取出当前的 dialog / mask / path，先发 **`dialogClose`** 事件。
+2. 默认启用动画时：先播 dialog 的收起 tween，再播遮罩淡出。
+3. **`mask.destroy()`**，对 dialog **`Tween.stopAllByTarget`** 后走 **`prefab.destroy(dialog)`**（会先 **`prefabDestroy`** 再 **`node.destroy()`**）。
+4. 清空模块内 `currentDialog` / `currentMask` / `currentPath` 等引用。
+
+若场景即将整体卸载、不希望先闪一帧「无遮罩」，可使用 **`detachOpenDialog()`**：只停止 tween 并清空模块引用，**不** `destroy` 节点（见 `dialog.ts` 注释）。
+
 ---
 
 ### AudioModule - 音频（BGM / Ambient / SFX）

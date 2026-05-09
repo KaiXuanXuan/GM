@@ -72,8 +72,10 @@ export class PrefabModule implements IPrefabModule {
         // Sync layer recursively to inherit parent's render layer
         this.syncLayerRecursively(node, parent.layer);
 
-        // Set position (default to Vec3.ZERO if not provided)
-        node.setPosition(position ?? Vec3.ZERO);
+        // Set position only if provided (otherwise keep prefab's original position)
+        if (position) {
+          node.setPosition(position);
+        }
 
         // Emit prefabCreate event
         this.event.emit('prefabCreate', { node, path });

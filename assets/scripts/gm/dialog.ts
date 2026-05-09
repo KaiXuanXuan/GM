@@ -75,7 +75,8 @@ export class DialogModule implements IDialogModule {
    * @returns Promise resolving to the dialog Node, or undefined on failure
    */
   async open(config: DialogOpenConfig): Promise<Node | undefined> {
-    const { path, parent: configParent, animation: animConfig } = config;
+    const { path, parent: configParent, animation: animConfig, mask: maskOpt } = config;
+    const useMask = maskOpt !== false;
 
     // Validate path
     if (!path) {
@@ -112,9 +113,13 @@ export class DialogModule implements IDialogModule {
       await this.close({ animation });
     }
 
-    // Create mask node first (mask has no animation)
-    const mask = this.createMask();
-    this.currentMask = mask;
+    let mask: Node | null = null;
+    if (useMask) {
+      mask = this.createMask();
+      this.currentMask = mask;
+    } else {
+      this.currentMask = null;
+    }
 
     // Load dialog prefab using PrefabModule (DIALOG-01)
     const dialog = await this.prefab.create({
@@ -124,16 +129,17 @@ export class DialogModule implements IDialogModule {
     });
 
     if (!dialog) {
-      // Clean up mask if dialog failed to load
-      mask.destroy();
+      if (mask) {
+        mask.destroy();
+      }
       this.currentMask = null;
       return undefined;
     }
 
-    // Find dialog's index and insert mask at that position
-    // This will push the dialog to index+1 (above the mask)
-    const dialogIndex = dialog.getSiblingIndex();
-    parent.insertChild(mask, dialogIndex);
+    if (useMask && mask) {
+      const dialogIndex = dialog.getSiblingIndex();
+      parent.insertChild(mask, dialogIndex);
+    }
 
     // Store reference
     this.currentDialog = dialog;
@@ -141,10 +147,10 @@ export class DialogModule implements IDialogModule {
 
     // Apply animations if enabled
     if (animation.enabled) {
-      // Play mask fade in animation (slightly faster than dialog)
-      const maskFadeDuration = animation.duration * 0.8;
-      void this.playMaskFadeIn(mask, maskFadeDuration);
-      // Play dialog open animation
+      if (useMask && mask) {
+        const maskFadeDuration = animation.duration * 0.8;
+        void this.playMaskFadeIn(mask, maskFadeDuration);
+      }
       await this.playOpenAnimation(dialog, animation.duration);
     }
 
@@ -200,7 +206,7 @@ export class DialogModule implements IDialogModule {
     }
 
     // Destroy dialog using PrefabModule (DIALOG-04, DIALOG-05)
-    // Stop any remaining animations before destroy
+    this.stopDialogScaleOpacityTweens();
     Tween.stopAllByTarget(dialog);
     this.prefab.destroy(dialog);
 
@@ -216,15 +222,7 @@ export class DialogModule implements IDialogModule {
    * 避免先 close() 导致遮罩消失、露出底层一帧再切场景造成的闪烁。
    */
   detachOpenDialog(): void {
-    // Stop any running animations
-    if (this.openTween) {
-      this.openTween.stop();
-      this.openTween = null;
-    }
-    if (this.closeTween) {
-      this.closeTween.stop();
-      this.closeTween = null;
-    }
+    this.stopDialogScaleOpacityTweens();
 
     // Stop mask animations
     if (this.currentMask) {
@@ -243,8 +241,18 @@ export class DialogModule implements IDialogModule {
    * @param duration - Animation duration in seconds
    * @returns Promise that resolves when animation completes
    */
+  /** 打开/关闭动画的 tween 目标是 state 对象，stopAllByTarget(dialog) 无法停止，必须先按引用停掉。 */
+  private stopDialogScaleOpacityTweens(): void {
+    this.openTween?.stop();
+    this.closeTween?.stop();
+    this.openTween = null;
+    this.closeTween = null;
+  }
+
   private playOpenAnimation(dialog: Node, duration: number): Promise<void> {
     return new Promise<void>((resolve) => {
+      this.stopDialogScaleOpacityTweens();
+
       // Ensure UIOpacity component exists
       let opacityComp = dialog.getComponent(UIOpacity);
       if (!opacityComp) {
@@ -255,7 +263,6 @@ export class DialogModule implements IDialogModule {
       dialog.setScale(0.5, 0.5, 1);
       opacityComp.opacity = 0;
 
-      // Stop any existing animation
       Tween.stopAllByTarget(dialog);
 
       // Create animation state object
@@ -296,13 +303,14 @@ export class DialogModule implements IDialogModule {
    */
   private playCloseAnimation(dialog: Node, duration: number): Promise<void> {
     return new Promise<void>((resolve) => {
+      this.stopDialogScaleOpacityTweens();
+
       // Ensure UIOpacity component exists
       let opacityComp = dialog.getComponent(UIOpacity);
       if (!opacityComp) {
         opacityComp = dialog.addComponent(UIOpacity);
       }
 
-      // Stop any existing animation
       Tween.stopAllByTarget(dialog);
 
       // Create animation state object
