@@ -22,7 +22,7 @@ class _AdService {
         try {
             console.log('[AdService] lv_finish', { lv });
         } catch (err) {
-            console.warn('[AdService] ShowInterstitial 调用失败', err);
+            console.warn('[AdService] reportLvFinish 调用失败', err);
         }
     }
 
