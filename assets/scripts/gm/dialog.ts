@@ -26,9 +26,6 @@ export class DialogModule implements IDialogModule {
   /** Path of current dialog (empty if none) */
   private currentPath: string = '';
 
-  /** Parent node for dialogs and masks */
-  private parent: Node | null = null;
-
   /** Current close animation tween (if any) */
   private closeTween: Tween<any> | null = null;
 
@@ -49,15 +46,6 @@ export class DialogModule implements IDialogModule {
   constructor(event: EventModule, prefab: PrefabModule) {
     this.event = event;
     this.prefab = prefab;
-  }
-
-  /**
-   * Set the parent node for dialogs and masks.
-   * Internal use only for maintaining single-layer dialog behavior.
-   * @param parent - Parent node (typically canvas)
-   */
-  private setParent(parent: Node): void {
-    this.parent = parent;
   }
 
   /**
@@ -97,9 +85,6 @@ export class DialogModule implements IDialogModule {
         return undefined;
       }
     }
-
-    // Store parent for future use (single-layer behavior)
-    this.parent = parent;
 
     // Merge animation config with defaults
     const animation = {
@@ -236,7 +221,7 @@ export class DialogModule implements IDialogModule {
 
   /**
    * Play open animation for dialog node.
-   * Animates from scale 0.5/opacity 0 to scale 1/opacity 255 with backOut easing.
+   * Animates from scale 0.5x original/opacity 0 to original scale/opacity 255 with backOut easing.
    * @param dialog - Dialog node to animate
    * @param duration - Animation duration in seconds
    * @returns Promise that resolves when animation completes
@@ -259,8 +244,11 @@ export class DialogModule implements IDialogModule {
         opacityComp = dialog.addComponent(UIOpacity);
       }
 
-      // Set initial state: small scale and transparent
-      dialog.setScale(0.5, 0.5, 1);
+      // Store original scale before animation
+      const originalScale = dialog.scale.clone();
+
+      // Set initial state: half scale and transparent
+      dialog.setScale(originalScale.x * 0.5, originalScale.y * 0.5, originalScale.z);
       opacityComp.opacity = 0;
 
       Tween.stopAllByTarget(dialog);
@@ -279,13 +267,13 @@ export class DialogModule implements IDialogModule {
         }, {
           easing: 'backOut',
           onUpdate: () => {
-            dialog.setScale(state.scale, state.scale, 1);
+            dialog.setScale(originalScale.x * state.scale, originalScale.y * state.scale, originalScale.z);
             opacityComp.opacity = Math.floor(state.opacity);
           },
         })
         .call(() => {
-          // Ensure final values are set
-          dialog.setScale(1, 1, 1);
+          // Ensure final values are set to original scale
+          dialog.setScale(originalScale);
           opacityComp.opacity = 255;
           this.openTween = null;
           resolve();
@@ -296,7 +284,7 @@ export class DialogModule implements IDialogModule {
 
   /**
    * Play close animation for dialog node.
-   * Animates from scale 1/opacity 255 to scale 0.5/opacity 0 with backIn easing.
+   * Animates from original scale/opacity 255 to scale 0.5x original/opacity 0 with backIn easing.
    * @param dialog - Dialog node to animate
    * @param duration - Animation duration in seconds
    * @returns Promise that resolves when animation completes
@@ -310,6 +298,9 @@ export class DialogModule implements IDialogModule {
       if (!opacityComp) {
         opacityComp = dialog.addComponent(UIOpacity);
       }
+
+      // Store original scale before animation
+      const originalScale = dialog.scale.clone();
 
       Tween.stopAllByTarget(dialog);
 
@@ -327,13 +318,13 @@ export class DialogModule implements IDialogModule {
         }, {
           easing: 'backIn',
           onUpdate: () => {
-            dialog.setScale(state.scale, state.scale, 1);
+            dialog.setScale(originalScale.x * state.scale, originalScale.y * state.scale, originalScale.z);
             opacityComp.opacity = Math.floor(state.opacity);
           },
         })
         .call(() => {
           // Ensure final values are set
-          dialog.setScale(0.5, 0.5, 1);
+          dialog.setScale(originalScale.x * 0.5, originalScale.y * 0.5, originalScale.z);
           opacityComp.opacity = 0;
           this.closeTween = null;
           resolve();
