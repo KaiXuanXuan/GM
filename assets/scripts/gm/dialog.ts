@@ -123,7 +123,9 @@ export class DialogModule implements IDialogModule {
 
     if (useMask && mask) {
       const dialogIndex = dialog.getSiblingIndex();
+      mask.layer = parent.layer;
       parent.insertChild(mask, dialogIndex);
+      mask.getComponent(Widget)?.updateAlignment();
     }
 
     // Store reference
@@ -401,7 +403,6 @@ export class DialogModule implements IDialogModule {
     w.isAlignTop = w.isAlignBottom = w.isAlignLeft = w.isAlignRight = true;
     w.left = w.right = w.top = w.bottom = 0;
     w.alignMode = Widget.AlignMode.ON_WINDOW_RESIZE;
-    w.updateAlignment();
 
     // Add UIOpacity for fade animation
     const opacityComp = mask.addComponent(UIOpacity);
