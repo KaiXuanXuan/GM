@@ -8,13 +8,12 @@
  *   initGM();
  *
  *   // Then anywhere in your code:
- *   window.GM.event.on('sceneChange', callback);
+ *   window.GM.event.on('playerDie', callback);
  *   window.GM.data.setState({ level: 5 });
  */
 
 import { EventModule } from './event';
 import { DataModule } from './data';
-import { SceneModule } from './scene';
 import { PrefabModule } from './prefab';
 import { DialogModule } from './dialog';
 import { AudioModule } from './audio';
@@ -31,9 +30,6 @@ class GM implements GMInterface {
   /** State management module with persistence */
   data: DataModule;
 
-  /** Scene loading and switching module */
-  scene: SceneModule;
-
   /** Prefab instantiation and destruction module */
   prefab: PrefabModule;
 
@@ -49,7 +45,6 @@ class GM implements GMInterface {
   constructor() {
     this.event = new EventModule();
     this.data = new DataModule();
-    this.scene = new SceneModule(this.event);
     this.prefab = new PrefabModule(this.event);
     this.dialog = new DialogModule(this.event, this.prefab);
     this.audio = new AudioModule();
@@ -69,15 +64,6 @@ class GM implements GMInterface {
     // Initialize data module if config provided
     if (config?.data?.defaults) {
       this.data.init({ defaults: config.data.defaults });
-    }
-
-    // Initialize scene module if config provided (empty object uses defaults)
-    if (config?.scene !== undefined) {
-      const sceneConfig = {
-        loadingScene: config.scene?.loadingScene ?? 'Loading',
-        mainScene: config.scene?.mainScene ?? 'Main'
-      };
-      this.scene.init(sceneConfig);
     }
 
     // Initialize audio module if config provided (empty object uses defaults)
@@ -107,7 +93,6 @@ class GM implements GMInterface {
     // Reset modules to fresh state
     this.event = new EventModule();
     this.data = new DataModule();
-    this.scene = new SceneModule(this.event);
     this.prefab = new PrefabModule(this.event);
     this.dialog = new DialogModule(this.event, this.prefab);
     this.audio = new AudioModule();
@@ -132,7 +117,7 @@ let instance: GMInterface | null = null;
  * Initialize the GM framework and attach to window.
  * This is the recommended way to start using GM.
  *
- * @param config - Optional configuration for initializing data, scene, and audio modules
+ * @param config - Optional configuration for initializing data and audio modules
  *
  * @example
  *   import { initGM } from './gm';
@@ -143,7 +128,6 @@ let instance: GMInterface | null = null;
  *   // Initialize all modules at once
  *   initGM({
  *     data: { defaults: { level: 1, score: 0 } },
- *     scene: { loadingScene: 'Loading', mainScene: 'Main' },
  *     audio: { audio: 'audio' }  // persistRoot defaults to true
  *   });
  *
@@ -171,5 +155,5 @@ export function getGM(): GMInterface | null {
 }
 
 // Re-export types for convenience
-export type { GMInterface, GMInitConfig, EventModule as IEventModule, DataModule as IDataModule, SceneModule as ISceneModule, PrefabModule as IPrefabModule, DialogModule as IDialogModule, AudioModule as IAudioModule } from './types';
-export { EventModule, DataModule, SceneModule, PrefabModule, DialogModule, AudioModule };
+export type { GMInterface, GMInitConfig, EventModule as IEventModule, DataModule as IDataModule, PrefabModule as IPrefabModule, DialogModule as IDialogModule, AudioModule as IAudioModule } from './types';
+export { EventModule, DataModule, PrefabModule, DialogModule, AudioModule };

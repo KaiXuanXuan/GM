@@ -1,15 +1,20 @@
-import { _decorator, Component, Node } from 'cc';
-const { ccclass, property } = _decorator;
+import { _decorator, Component } from 'cc';
+import { initGM } from '../gm';
+const { ccclass } = _decorator;
 
 @ccclass('Main')
 export class Main extends Component {
     start() {
-
-    }
-
-    update(deltaTime: number) {
-        
+        initGM({
+            data: {
+                defaults: {
+                    currentLevel: 1,
+                    unlockedLevel: 1,
+                    bgm: true,
+                    sfx: true,
+                },
+            },
+            audio: {},
+        });
     }
 }
-
-

@@ -22,7 +22,7 @@ declare global {
      *
      * @example
      *   window.GM.init();
-     *   window.GM.event.on('sceneChange', (data) => console.log(data));
+     *   window.GM.event.on('playerDie', (data) => console.log(data));
      *   window.GM.data.setState({ level: 5 });
      */
     GM: import('./types').GMInterface;

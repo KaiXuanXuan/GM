@@ -2,7 +2,7 @@
 
 GM (Game Manager) Framework - Cocos Creator 3.x 通用游戏框架，提供全局单例访问游戏模块。
 
-**核心价值**: 简单、可配置、单入口的游戏框架，处理常见的游戏开发模式（场景切换、事件通信、弹窗管理、状态持久化），避免过度复杂。
+**核心价值**: 简单、可配置、单入口的游戏框架，处理常见的游戏开发模式（事件通信、弹窗管理、状态持久化、音频），避免过度复杂。
 
 ---
 
@@ -10,7 +10,7 @@ GM (Game Manager) Framework - Cocos Creator 3.x 通用游戏框架，提供全�
 
 ### 初始化
 
-在游戏入口（如 Loading 场景的脚本）中初始化 GM：
+在游戏入口（如 `Main` 场景的脚本）中初始化 GM：
 
 ```typescript
 import { initGM } from './gm';
@@ -19,14 +19,11 @@ import { initGM } from './gm';
 initGM({
   data: {
     defaults: {
-      level: 1,
-      score: 0,
-      playerName: 'Player'
+      currentLevel: 1,
+      unlockedLevel: 1,
+      bgm: true,
+      sfx: true,
     }
-  },
-  scene: {
-    loadingScene: 'Loading',  // 默认: 'Loading'
-    mainScene: 'Main'         // 默认: 'Main'
   },
   audio: {
     audio: 'audio',           // 默认: 'audio'
@@ -37,7 +34,6 @@ initGM({
 // 方式二：使用空对象，全部使用默认配置
 initGM({
   data: { defaults: { level: 1 } },
-  scene: {},     // 使用默认场景名 'Loading' 和 'Main'
   audio: {}      // 使用默认配置：audio 目录 'audio'，persistRoot: true
 });
 
@@ -46,7 +42,6 @@ initGM();
 
 // 稍后单独初始化
 window.GM.data.init({ defaults: { level: 1 } });
-window.GM.scene.init({ loadingScene: 'Loading', mainScene: 'Main' });
 window.GM.audio.init({ audio: 'audio' });
 ```
 
@@ -68,7 +63,6 @@ const level = window.GM.data.getState<number>('level');
 |------|----------|
 | `event` | 发布/订阅事件通信，解耦游戏逻辑 |
 | `data` | 全局状态管理，自动 localStorage 持久化 |
-| `scene` | 场景预加载与切换，支持进度回调 |
 | `prefab` | 动态 Prefab 实例化与销毁 |
 | `dialog` | 弹窗管理，自动遮罩层，单层模式 |
 | `audio` | 背景音乐（BGM）、环境音（Ambient）与音效（SFX） |
@@ -81,25 +75,25 @@ const level = window.GM.data.getState<number>('level');
 
 ```typescript
 // 注册监听器
-const onSceneChange = window.GM.event.on('sceneChange', (data) => {
-  console.log(`场景切换: ${data.from} -> ${data.to}`);
+const onPlayerDie = window.GM.event.on('playerDie', (data) => {
+  console.log(`玩家死亡: ${data.reason}`);
 });
 
 // 发送事件（带数据）
 window.GM.event.emit('playerDie', { reason: 'collision' });
 
 // 移除特定监听器
-window.GM.event.off('sceneChange', onSceneChange);
+window.GM.event.off('playerDie', onPlayerDie);
 
 // 移除该事件的所有监听器
-window.GM.event.off('sceneChange');
+window.GM.event.off('playerDie');
 
 // 清除所有事件监听器
 window.GM.event.offAll();
 ```
 
 **特性**:
-- 事件名使用 camelCase（如 `sceneChange`、`playerDie`）
+- 事件名使用 camelCase（如 `playerDie`、`levelComplete`）
 - 发送到不存在的事件时静默失败
 - `on()` 返回回调函数，便于链式调用和后续移除
 
@@ -137,36 +131,6 @@ window.GM.data.onChange('score', (newVal, oldVal) => {
 - 自动持久化到 localStorage（key: `gm_game_state`）
 - 使用严格相等（`===`）检测变化，仅在实际变化时触发回调
 - localStorage 中的值覆盖默认值
-
----
-
-### SceneModule - 场景管理
-
-```typescript
-// 配置场景名称
-window.GM.scene.init({
-  loadingScene: 'Loading',
-  mainScene: 'Main'
-});
-
-// 预加载主场景（带进度回调）
-window.GM.scene.loadMain((progress) => {
-  console.log(`加载进度: ${Math.floor(progress * 100)}%`);
-  // 更新进度条 UI...
-}).then(() => {
-  console.log('预加载完成');
-  // 切换到主场景
-  window.GM.scene.switchToMain();
-});
-
-// 获取当前场景名
-const current = window.GM.scene.currentScene;
-```
-
-**特性**:
-- `loadMain()` 返回 Promise，支持 async/await
-- 进度值范围 0-1
-- `switchToMain()` 会发送 `sceneChange` 事件
 
 ---
 
@@ -313,7 +277,6 @@ window.GM.audio.setSfxVolume(1);
 
 | 事件名 | 触发时机 | 数据结构 |
 |--------|----------|----------|
-| `sceneChange` | 场景切换时 | `{ from: string, to: string }` |
 | `prefabCreate` | Prefab 实例化成功时 | `{ node: Node, path: string }` |
 | `prefabDestroy` | Prefab 销毁时 | `{ node: Node }` |
 | `dialogOpen` | 弹窗打开时 | `{ node: Node, path: string }` |
@@ -327,7 +290,7 @@ window.GM.audio.setSfxVolume(1);
 
 | 方法 | 说明 |
 |------|------|
-| `initGM(config?)` | 初始化 GM 并挂载到 `window.GM`，可选配置 data/scene/audio 模块 |
+| `initGM(config?)` | 初始化 GM 并挂载到 `window.GM`，可选配置 data/audio 模块 |
 | `getGM()` | 获取 GM 实例（不挂载到 window） |
 | `window.GM.init(config?)` | 初始化框架（`initGM()` 已调用） |
 | `window.GM.destroy()` | 清理 GM，移除 `window.GM` 引用 |
@@ -349,15 +312,6 @@ window.GM.audio.setSfxVolume(1);
 | `setState(values)` | 部分状态对象 | void |
 | `getState(key?)` | 可选键名 | 值或完整状态 |
 | `onChange(key, callback)` | 键名, 回调(newVal, oldVal) | void |
-
-### SceneModule
-
-| 方法 | 参数 | 返回值 |
-|------|------|--------|
-| `init(config)` | `{ loadingScene?, mainScene? }` | void |
-| `loadMain(onProgress?)` | 可选进度回调(0-1) | `Promise<void>` |
-| `switchToMain()` | - | void |
-| `currentScene` | getter | string |
 
 ### PrefabModule
 
@@ -414,7 +368,6 @@ assets/script/gm/
   types.ts      - TypeScript 接口定义
   event.ts      - EventModule 实现
   data.ts       - DataModule 实现
-  scene.ts      - SceneModule 实现
   prefab.ts     - PrefabModule 实现
   dialog.ts     - DialogModule 实现
   audio.ts      - AudioModule 实现
@@ -432,7 +385,6 @@ import type {
   GMInterface,
   IEventModule,
   IDataModule,
-  ISceneModule,
   IPrefabModule,
   IDialogModule,
   IAudioModule

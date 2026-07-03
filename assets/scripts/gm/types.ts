@@ -79,41 +79,6 @@ export interface DataModule {
 }
 
 /**
- * Scene Module Interface
- * Provides scene loading and switching with progress callbacks.
- */
-export interface SceneModule {
-  /**
-   * Configure scene names for loading and main scenes.
-   * @param config - Configuration object with optional scene names
-   * @param config.loadingScene - Name of the loading scene (optional)
-   * @param config.mainScene - Name of the main game scene (optional)
-   */
-  init(config: { loadingScene?: string; mainScene?: string }): void;
-
-  /**
-   * Preload the main scene with optional progress reporting.
-   * Progress callback receives values between 0 and 1.
-   * @param onProgress - Optional callback for progress updates (0-1)
-   * @returns Promise that resolves when preload completes
-   */
-  loadMain(onProgress?: (progress: number) => void): Promise<void>;
-
-  /**
-   * Switch to the preloaded main scene.
-   * Should be called after loadMain() completes.
-   * Emits 'sceneChange' event with { from, to } payload.
-   */
-  switchToMain(): void;
-
-  /**
-   * Get the current scene name.
-   * Returns the name of the currently active scene.
-   */
-  currentScene: string;
-}
-
-/**
  * Dialog animation configuration.
  * Used to control open/close animation behavior.
  */
@@ -281,13 +246,6 @@ export interface GMInitConfig {
   data?: { defaults: Record<string, any> };
 
   /**
-   * Scene module configuration
-   * @param loadingScene - Name of the loading scene
-   * @param mainScene - Name of the main game scene
-   */
-  scene?: { loadingScene?: string; mainScene?: string };
-
-  /**
    * Audio module configuration
    * @param persistRoot - If true, audio node survives scene loads (default: true)
    * @param audio - Folder under resources/ for audio clips (default: 'audio')
@@ -305,9 +263,6 @@ export interface GMInterface {
 
   /** State management module with persistence */
   data: DataModule;
-
-  /** Scene loading and switching module */
-  scene: SceneModule;
 
   /** Prefab instantiation and destruction module */
   prefab: PrefabModule;
