@@ -31,7 +31,6 @@ npm install
 
 | 路径 | 说明 | 仓库 |
 |------|------|------|
-| `extensions/cocos-mcp-server` | Cocos MCP Server | https://gitlab.umcasual.cn/mcp/cocos-mcp-server.git |
 | `extensions/js-obfuscator` | Cocos JS Obfuscator | https://github.com/KaiXuanXuan/cocos-js-obfuscator.git |
 
 ## TypeScript 配置
