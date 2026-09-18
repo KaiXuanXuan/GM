@@ -85,7 +85,7 @@ export interface DataModule {
 export interface DialogAnimationConfig {
   /** Whether animation is enabled (default: true) */
   enabled?: boolean;
-  /** Animation duration in seconds (default: 0.3) */
+  /** Animation duration in seconds (default: 0.2) */
   duration?: number;
 }
 
@@ -127,7 +127,7 @@ export interface DialogModule {
    * @param config.parent - Parent node for dialog and mask (optional, defaults to Canvas if not provided)
    * @param config.animation - Optional animation configuration
    * @param config.animation.enabled - Whether animation is enabled (default: true)
-   * @param config.animation.duration - Animation duration in seconds (default: 0.3)
+   * @param config.animation.duration - Animation duration in seconds (default: 0.2)
    * @returns Promise resolving to the dialog Node, or undefined on failure
    */
   open(config: DialogOpenConfig): Promise<any | undefined>; // Node from 'cc'
@@ -140,7 +140,7 @@ export interface DialogModule {
    *
    * @param config.animation - Optional animation configuration
    * @param config.animation.enabled - Whether animation is enabled (default: true)
-   * @param config.animation.duration - Animation duration in seconds (default: 0.3)
+   * @param config.animation.duration - Animation duration in seconds (default: 0.2)
    * @returns Promise that resolves when dialog is closed and destroyed
    */
   close(config?: DialogCloseConfig): Promise<void>;

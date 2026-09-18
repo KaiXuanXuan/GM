@@ -35,7 +35,7 @@ export class DialogModule implements IDialogModule {
   /** Default animation configuration */
   private defaultAnimationConfig = {
     enabled: true,
-    duration: 0.3,
+    duration: 0.2,
   };
 
   /**
@@ -59,7 +59,7 @@ export class DialogModule implements IDialogModule {
    * @param config.parent - Parent node for dialog and mask (optional, defaults to Canvas if not provided)
    * @param config.animation - Optional animation configuration
    * @param config.animation.enabled - Whether animation is enabled (default: true)
-   * @param config.animation.duration - Animation duration in seconds (default: 0.3)
+   * @param config.animation.duration - Animation duration in seconds (default: 0.2)
    * @returns Promise resolving to the dialog Node, or undefined on failure
    */
   async open(config: DialogOpenConfig): Promise<Node | undefined> {
@@ -155,7 +155,7 @@ export class DialogModule implements IDialogModule {
    *
    * @param config.animation - Optional animation configuration
    * @param config.animation.enabled - Whether animation is enabled (default: true)
-   * @param config.animation.duration - Animation duration in seconds (default: 0.3)
+   * @param config.animation.duration - Animation duration in seconds (default: 0.2)
    * @returns Promise that resolves when dialog is closed and destroyed
    */
   async close(config?: DialogCloseConfig): Promise<void> {
